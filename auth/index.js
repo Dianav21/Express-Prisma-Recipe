@@ -19,6 +19,4 @@ export default function setupJWTStrategy(passport){
         })
     )
 
-    ++
-
 }
