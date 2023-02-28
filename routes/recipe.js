@@ -2,7 +2,7 @@ import express from "express"
 import { prisma } from "../db/index.js"
 
 
-export default function recipeRouter(){
+export default function recipeRouter(passport){
     const router = express.Router();
 
 //todo
@@ -11,9 +11,7 @@ router.get("/", async (request, response) => {
 
     //tells prisma to talk to database and find stuff
     const allRecipes = await prisma.recipes.findMany({
-        where: {
-            userId: 1 
-        },
+        
         include: {
             user: true 
         }
@@ -26,13 +24,13 @@ router.get("/", async (request, response) => {
     });
 })
 
-router.post("/", async (request, response) => {
+router.post("/", passport.authenticate("jwt", {session: false}), async (request, response) => {
     //creates a recipe
     
     const newRecipe = await prisma.recipes.create({
         data: {
             name: request.body.recipe,
-            userId: 1,
+            userId: request.user.id,
             description: request.body.description
         }
     });
@@ -42,14 +40,44 @@ router.post("/", async (request, response) => {
         success: true
     });
 })
-router.get("/:userId/:recipeId", async function(request, response){
+//updates recipes 
+router.put("/:recipeId", passport.authenticate("jwt", {session: false}), async (request, response) => {
+    const updateRecipe = await prisma.recipe.update({
+        where: {
+            id: parseInt(request.params.recipeId)
+        },
+        data: {
+            name: request.body.recipe,
+            description: request.body.description
+        }
+    });
+    //sends back response if it works 
+    response.status(200).json({
+        success: true, 
+        message: "recipe updated."
+    });
+})
+
+router.delete("/:recipeId", passport.authenticate("jwt", {session: false}), async (request, response) => {
+    const deleteRecipe = await prisma.recipe.delete({
+        where: {
+            id: parseInt(request.params.recipeId)
+        }
+    });
+    response.status(200).json({
+        success: true, 
+        message: "recipe deleted!"
+    })
+})
+router.get("/:userId/:recipeId", passport.authenticate("jwt", {session: false}), async function(request, response){
     try {
         const getRecipe = await prisma.recipes.findMany({
             where:{
                 id:parseInt(request.params.recipeId),
                 user:{
                     id:{
-                        equals:parseInt(request.params.userId)
+                        equals:parseInt(request.params.userId),
+                    
                     }
                 }
                 

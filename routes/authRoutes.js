@@ -11,7 +11,7 @@ router.post("/signup", async (req, res) => {
   try {
     const foundUser = await prisma.user.findFirst({
       where: {
-        name: req.body.username,
+        username: req.body.username,
       },
     });
     if (foundUser) {
@@ -26,7 +26,7 @@ router.post("/signup", async (req, res) => {
         const newUser = await prisma.user.create({
           data: {
             username: req.body.username,
-            password: req.body.password,
+            password: hashPassword,
           },
         });
 
@@ -49,6 +49,7 @@ router.post("/signup", async (req, res) => {
       }
     }
   } catch (error) {
+    console.log(error)
     res.status(500).json({
       success: false,
       message: "Something went wrong",
@@ -95,6 +96,7 @@ router.post("/login", async (req, res) => {
           });
         }
       } catch (error) {
+        console.log(error)
         res.status(500).json({
           success: false,
           message: "something went wrong",
